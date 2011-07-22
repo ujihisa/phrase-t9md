@@ -55,11 +55,11 @@ require 'syslog'
 
 class SysLogger
   SYMBOL_EQUIVALENTS = {
-    :fatal => Syslog::LOG_CRIT,
-    :error => Syslog::LOG_ERR,
-    :warn  => Syslog::LOG_WARNING,
-    :info  => Syslog::LOG_INFO,
-    :debug => Syslog::LOG_DEBUG
+    fatal: Syslog::LOG_CRIT,
+    error: Syslog::LOG_ERR,
+    warn: Syslog::LOG_WARNING,
+    info: Syslog::LOG_INFO,
+    debug: Syslog::LOG_DEBUG
   }
 
   # Set the log level
@@ -109,8 +109,8 @@ def detect_consequtive_failure(now)
     raise MultipleConsequtiveFailure
   end
   "OK"
-rescue MultipleConsequtiveFailure
-  "MultipleConsequtiveFailure"
+rescue MultipleConsequtiveFailure => e
+  e.to_s
 end
 
 def case1
@@ -125,7 +125,7 @@ def case2
   sleep 1; @try_times << Time.now.to_i
   detect_consequtive_failure(Time.now.to_i)
 end
-case1  # => "OK"
+case1 # => "OK"
 case2 # => "MultipleConsequtiveFailure"
 
 # Phrase: Socket programming
@@ -160,21 +160,21 @@ exit unless pid.nil?
 puts "Daemon pid: #{Process.pid}" # Or save it somewhere, etc.
 
 # Release working directory
-Dir.chdir '/' 
+Dir.chdir '/'
 # Reset umask
 File.umask 0000
 
 STDIN.reopen '/dev/null'
 STDOUT.reopen '/dev/null', 'a'
 STDERR.reopen STDOUT
-f = File.open('/tmp/daemon.log', 'w')
-
-3.times do |n|
-  f.puts n
-  f.flush
-  sleep 10
+File.open('/tmp/daemon.log', 'w') do |f|
+  3.times do |n|
+    f.puts n
+    f.flush
+    sleep 10
+  end
+  f.puts "FINISH!!"
 end
-f.puts "FINISH!!"
 
 # Phrase: appscript iterm sample
 #===========================================================
@@ -182,7 +182,7 @@ f.puts "FINISH!!"
 def create_sessions(max)
   iTerm = app('iTerm')
   1.upto(max) do |num|
-    iTerm.current_terminal.launch_(:session => "Default Session")
+    iTerm.current_terminal.launch_(session: "Default Session")
     iTerm.current_terminal.current_session.name.set("tab_#{num}")
     # puts iTerm.current_terminal.current_session.name.get
   end
@@ -192,15 +192,15 @@ def create_terminal
   iTerm = app('iTerm')
   # iTerm.make(:new => :terminal)
   # max = iTerm.terminals.count
-  iTerm.current_terminal.make(:at => iTerm.terminals.last.sessions.end, :new => :session)
+  iTerm.current_terminal.make(at: iTerm.terminals.last.sessions.end, new: :session)
   shell = ENV['SHELL']
-  iTerm.current_terminal.current_session.exec(:command => shell)
+  iTerm.current_terminal.current_session.exec(command: shell)
 end
 
 def create_terminals(max)
   iTerm = app('iTerm')
   1.upto(max) do |num|
-    iTerm.current_terminal.launch_(:session => "Default Session")
+    iTerm.current_terminal.launch_(session: "Default Session")
     iTerm.current_terminal.current_session.name.set("tab_#{num}")
     # puts iTerm.current_terminal.current_session.name.get
   end
@@ -212,7 +212,7 @@ def bulk_execute_other_than_current_active_term(cmd)
   1.upto(iTerm.terminals.count) do |num|
     iTerm.terminals[num].select
     next if iTerm.terminals[num].current_session.tty.get == myself 
-    iTerm.current_terminal.current_session.write(:text => cmd)
+    iTerm.current_terminal.current_session.write(text: cmd)
     sleep 0.03
   end
 end
@@ -306,7 +306,7 @@ class Parent
     def inherited(subclass)
       @@plugins << subclass
     end
-  
+
     def plugins; @@plugins end
   end
 
@@ -336,17 +336,17 @@ tmpfile.path # => nil
 #===========================================================
 class String
   def ansi_colored?
-    self =~ /^\e\[[\[\e0-9;m]+m/
+    /^\e\[[\[\e0-9;m]+m/ =~ self
   end
 
   def to_s
-    tmp = self.sub(/^\e\[[\[\e0-9;m]+m/, "")
-    tmp.sub(/(\e\[[\[\e0-9;m]+m)$/, "")
+    self.sub(/^\e\[[\[\e0-9;m]+m/, "").
+      sub(/(\e\[[\[\e0-9;m]+m)$/, "")
   end
 
   def inner_str
-    tmp = self.sub(/^\e\[[\[\e0-9;m]+m/, "")
-    tmp.sub(/(\e\[[\[\e0-9;m]+m)$/, "")
+    self.sub(/^\e\[[\[\e0-9;m]+m/, "").
+      sub(/(\e\[[\[\e0-9;m]+m)$/, "")
   end
 end
 
@@ -369,7 +369,7 @@ end
 
 curry(:add, 2)[3]                  # => 5
 curry(method(:add), 2)[3]          # => 5
-curry(lambda {|a, b| a * b}, 2)[3] # => 6
+curry(lambda {|a, b| a * b }, 2)[3] # => 6
 
 shift = 1
 (0...10).map(&curry(:add, shift))
@@ -408,12 +408,12 @@ require "stringio"
 class ApacheConfig
   extend Mixlib::Config
 end
-ApacheConfig.from_file("./apache.conf")  # => 
-ApacheConfig.first_value                 # => 
-ApacheConfig.other_value                 # => 
-ApacheConfig.group                       # => 
-ApacheConfig.http_port                   # => 
-ApacheConfig.username                    # => 
+ApacheConfig.from_file("./apache.conf")  # =>
+ApacheConfig.first_value                 # =>
+ApacheConfig.other_value                 # =>
+ApacheConfig.group                       # =>
+ApacheConfig.http_port                   # =>
+ApacheConfig.username                    # =>
 
 # Phrase: String Conversion
 #===========================================================
@@ -512,8 +512,7 @@ def read_code3( source_file )
         code + "    #{line}",
         count + 1,
         (max_width < line.size) ? line.size : max_width,
-        lines
-      )
+        lines)
     end
   }
   func.call("", 0, 0, File.open(source_file).readlines)
@@ -779,17 +778,17 @@ A.meth3(1) # -:50: private method `meth3' called for A:Class (NoMethodError)
 require "rubygems"
 require "json"
 default_config = {
-  :port => 80,
-  :listen => "127.0.0.1",
-  :hostname => "localhost",
-  :docroot => "/var/www/html",
+  port: 80,
+  listen: "127.0.0.1",
+  hostname: "localhost",
+  docroot: "/var/www/html",
 }
 
 user_config = {
-  :port => 8080,
-  :listen => "127.0.0.1",
-  :hostname => "localhost",
-  :docroot => "/var/www/usr",
+  port: 8080,
+  listen: "127.0.0.1",
+  hostname: "localhost",
+  docroot: "/var/www/usr",
 }
 
 default_config.update(user_config)
@@ -815,7 +814,7 @@ module Kernel
   alias_method :old_inspct, :inspect
   alias_method :inspect, :pretty_inspect
 end
-str = {:port =>80, :listen => "127.0.0.1" }.inspect
+str = {port: 80, listen: "127.0.0.1"}.inspect
 
 # Phrase: YAML::Store , PStore
 #===========================================================
@@ -842,8 +841,8 @@ end
 #===========================================================
 Signal.trap(:INT) { puts "Interrupted"; exit 1 }
 
-# or 
-Signal.trap(:INT) do 
+# or
+Signal.trap(:INT) do
   puts "Interrupted"
   exit 1
 end
@@ -851,22 +850,20 @@ end
 # Phrase: Configuration file parse(support nested config)
 #===========================================================
 def read_conf(conf)
-  File.open(conf).readlines.map  do |line|
+  File.open(conf).readlines.map {|line|
     line.chomp!
-    if line =~ /@include (.*)/
+    if /@include (.*)/ =~ line
       line = read_conf($1)
     end
     line
-  end.flatten
+  }.flatten
 end
 
 def parse_conf(array)
-  h = {}
-  array.each do |e|
+  array.inject({}) {|h, e|
     key, val = e.split('=')
-    h[key] = val
-  end
-  h
+    h.merge key => val
+  }
 end
 
 conf1 =<< EOS
@@ -945,9 +942,10 @@ class Library
   end
 
   def method_missing(meth, *args, &blk)
-    key = if (meth.to_s =~ /^find_by_(.*)/) then
-            $1.to_sym
-          end
+    key =
+      if (/^find_by_(.*)/ =~ meth.to_s)
+        $1.to_sym
+      end
 
     @books.find_all do |book|
       (book.send key) == args.first
@@ -956,14 +954,14 @@ class Library
 end
 
 library = Library.new("Suginami") do
-  new_book :title  => 'War and Peace',
-           :author => 'Tolstoy',
-           :isbn   => '0375760644',
-           :owners => ['Amanda']
+  new_book title: 'War and Peace',
+           author: 'Tolstoy',
+           isbn: '0375760644',
+           owners: ['Amanda']
 
-  new_book :title  => 'Lord of the Rings',
-           :author => 'Tolkien',
-           :owners => ['Steve', 'Amanda', 'Marty']
+  new_book title: 'Lord of the Rings',
+           author: 'Tolkien',
+           owners: ['Steve', 'Amanda', 'Marty']
 end
 
 library.find_by_title 'War and Peace'
@@ -994,7 +992,7 @@ logio.sync = true
 logger = Logger.new(logio)
 
 logger.info { "START: this is sample" }
-10.times do 
+10.times do
   sleep 1
   logger.error { "this is sample erro" }
 end
@@ -1054,7 +1052,7 @@ class MyOpenStruct
 
   def method_missing(name, *args)
     attribute = name.to_s
-    if attribute =~ /=$/
+    if /=$/ =~ attribute
       # chop ensure removing trailing '='
       @attributes[attribute.chop] = args[0]
     else
@@ -1071,19 +1069,19 @@ icecream.flavor  # => "vanilla"
 # Phrase: setup option with Hash#merge
 #===========================================================
 opt = {
-  :port => 80,
-  :listen => "127.0.0.1",
-  :hostname => "localhost",
-  :docroot => "/var/www/html",
+  port: 80,
+  listen: "127.0.0.1",
+  hostname: "localhost",
+  docroot: "/var/www/html",
 }
 
 user_opt = {
-  :port => 8080,
-  :docroot => "/home/html"
+  port: 8080,
+  docroot: "/home/html"
 }
 
-opt.merge! user_opt # => {:port=>8080, :listen=>"127.0.0.1", :hostname=>"localhost", :docroot=>"/home/html"}
-opt # => {:port=>8080, :listen=>"127.0.0.1", :hostname=>"localhost", :docroot=>"/home/html"}
+opt.merge! user_opt # => {port: 8080, listen: "127.0.0.1", hostname: "localhost", docroot: "/home/html"}
+opt # => {port: 8080, listen: "127.0.0.1", hostname: "localhost", docroot: "/home/html"}
 
 # Phrase: add custom libdir to LOAD_PATH
 #===========================================================
@@ -1102,9 +1100,9 @@ classes = ObjectSpace.each_object(Class)
 pure_modules = modules.to_a  - classes.to_a
 modules.map {|e| "#{e}" }.grep(/Object/) # => ["ObjectSpace", "Object",....]
 # print ancestors for the modules not including Kernel module
-modules.select do |e|
+modules.select {|e|
   not (e === Kernel)
-end.each do |e|
+}.each do |e|
   puts "#{e}\t:#{e.ancestors}"
 end
 
@@ -1136,7 +1134,7 @@ Yappo.ancestors # => [Yappo, FlowerGlowable, Cattle, Object, Kernel]
 # Phrase: eval and binding
 #============================================================
 def get_binding(str)
-  return binding
+  binding
 end
 str = "hello"
 eval "str + ' Fred'"  # => "hello Fred"
@@ -1169,7 +1167,7 @@ class Person
 end
 
 Person.instance_methods(false) # => ["parents", "children", "friends"]
-p = Person.new 
+p = Person.new
 def p.load_parents
   ["mama","papa"]
 end
@@ -1228,12 +1226,12 @@ class Obj1 < SomeBase
   end
 end
 
-t9md = Obj1.new :name => "t9md", :my_password => "ab", :age => 19
+t9md = Obj1.new name: "t9md", my_password: "ab", age: 19
 t9md.validate # => [["validate_age", true], ["validate_pass", false]]
-yuri= Obj1.new :name => "yuri", :my_password => "abcdefgh", :age => 18
+yuri= Obj1.new name: "yuri", my_password: "abcdefgh", age: 18
 yuri.validate # => [["validate_age", false], ["validate_pass", true]]
-ryu= Obj1.new :name => "ryu",:my_password => "abcdefgh",
-              :secret_password => "adei", :age => 45
+ryu= Obj1.new name: "ryu",my_password: "abcdefgh",
+              secret_password: "adei", age: 45
 ryu.validate # => [["validate_age", true], ["validate_pass", false]]
 
 
@@ -1251,11 +1249,11 @@ instance_variables # => ["@event", "@region"]
 class Person
   def initialize(name, age, sex)
     @name = name
-    @aget = age
+    @age = age
     @sex = sex
   end
 end
-Person.new('Faroog', 23, :male) # => #<Person:0x23334 @sex=:male, @aget=23, @name="Faroog">
+Person.new('Faroog', 23, :male) # => #<Person:0x23334 @sex=:male, @age=23, @name="Faroog">
 
 class Person2
   def initialize(attributes)
@@ -1265,9 +1263,9 @@ class Person2
   end
 end
 
-Person2.new :name => 'Faroog',
-            :age  => 23, 
- 
+Person2.new name: 'Faroog',
+            age: 23,
+
 # Phrase: [metaprog] singleton method
 #============================================================
 class Person
@@ -1348,7 +1346,7 @@ class TestSuite
   def run
     self.methods.grep(/^test/).each { |m| send m }
   end
-  
+
   def test_one_thing
     puts "I'm testing one thing"
   end
@@ -1453,7 +1451,7 @@ class Sample
   @self_at_sample = self
 
 #------------------------
-# instance_eval 
+# instance_eval
 #------------------------
 # ブロックが与えられた場合にはそのブロックをオブジェクトのコンテキス
 # トで評価してその結果を返します。ブロックの引数 obj には 
@@ -1465,7 +1463,7 @@ class Sample
   self.instance_eval {
     def hello1
       "hello1: #{self}"
-    end 
+    end
   }
 
   instance_eval {
@@ -1590,8 +1588,8 @@ AClass.singleton_methods # => ["cls_meth1", "cls_meth4", "metacls", "cls_meth2"]
 AClass.singleton_methods(false) # => ["cls_meth1", "cls_meth4", "cls_meth2"]
 AClass.ancestors # => [AClass, Object, Kernel]
 AClass.cls_meth2 # => "I'm cls meth2"
-AClass.cls_meth3 # => 
-AClass.cls_meth4 # => 
+AClass.cls_meth3 # =>
+AClass.cls_meth4 # =>
 
 # Phrase: handle platform dependent setting with 'rbconfig.rb'
 #============================================================
@@ -1611,8 +1609,8 @@ pwent = Etc.getpwnam(Etc.getlogin)
 result = []
 # process only method defined in 'Struct::Passwd'
 pwent.class.instance_methods(false).each do |meth|
-    next if meth =~ /=\z/
-        result << "%-10s %-s" % [  meth, pwent.send(meth) ]
+  next if meth =~ /=\z/
+  result << "%-10s %-s" % [  meth, pwent.send(meth) ]
 end
 puts result
 

@@ -54,7 +54,7 @@ endtry
 " Phrase: Basic
 "======================================================================
 " filter example
-let lis = [ 1, 2, 3, 4, 5]
+let lis = [1, 2, 3, 4, 5]
 echo filter(copy(lis),"v:val % 2")
 echo filter(lis,"v:val % 2 == 0")
 
@@ -96,7 +96,7 @@ nnoremap          [tag]t  <C-]>
 nnoremap <silent> [tag]n  :<C-u>tag<CR>
 nnoremap <silent> [tag]p  :<C-u>pop<CR>
 nnoremap <silent> [tag]l  :<C-u>tags<CR>
-nnoremap [t    :echo "but you have to wait! til &timeout"<CR>
+nnoremap [t    :<C-u>echo "but you have to wait! til &timeout"<CR>
 
 "-----------------------------------------------------------------
 " 3. best
@@ -108,7 +108,7 @@ nnoremap          <SID>[tag]t  <C-]>
 nnoremap <silent> <SID>[tag]n  :<C-u>tag<CR>
 nnoremap <silent> <SID>[tag]p  :<C-u>pop<CR>
 nnoremap <silent> <SID>[tag]l  :<C-u>tags<CR>
-nnoremap [t    :echo "but you have to wait! til &timeout"<CR>
+nnoremap [t    :<C-u>echo "but you have to wait! til &timeout"<CR>
 
 "-----------------------------------------------------------------
 
@@ -119,21 +119,21 @@ require 'rubygems'
 require 'appscript'
 ENDRUBY
 
-fun! ITermWrite(cmd)
+function! ITermWrite(cmd)
   ruby Appscript.app('iTerm').current_terminal.sessions.write(:text => VIM::evaluate('a:cmd'))
-endfun
+endfunction
 
 " Phrase: Python Interface
 "===========================================================
-fun! PyDelLines(start,end)
+function! PyDelLines(start,end)
 python << EOF
 cb = vim.current.buffer
 start = int(vim.eval('a:start'))
 end = int(vim.eval('a:end'))
 del cb[start:end]
 EOF
-endfun
-nnoremap <buffer> <F6> :call PyTest()<CR>
+endfunction
+nnoremap <buffer> <F6> :<C-u>call PyTest()<CR>
 
 " Phrase: expand()
 "============================================================
@@ -147,33 +147,33 @@ echo expand("%:p:r") | "delete extention '/home/hoge/hoge
 " Phrase: OOP Style Array implementation
 "============================================================
 let s:m = {}
-fun! s:m.shift()
-	return remove(self.data, 0)
-endfun
+function! s:m.shift()
+  return remove(self.data, 0)
+endfunction
 
-fun! s:m.unshift(val)
-	return insert(self.data, a:val, 0)
-endfun
+function! s:m.unshift(val)
+  return insert(self.data, a:val, 0)
+endfunction
 
-fun! s:m.pop()
-	return remove(self.data, -1)
-endfun
+function! s:m.pop()
+  return remove(self.data, -1)
+endfunction
 
-fun! s:m.push(val)
-	return add(self.data, a:val)
-endfun
+function! s:m.push(val)
+  return add(self.data, a:val)
+endfunction
 
-fun! s:m.concat(ary)
-	return extend(self.data, a:ary)
-endfun
+function! s:m.concat(ary)
+  return extend(self.data, a:ary)
+endfunction
 
 let Array = {}
-fun! Array.new(data)
-	let obj = {}
-	let obj.data = a:data
-	call extend(obj, s:m, 'error')
-	return obj
-endfun
+function! Array.new(data)
+  let obj = {}
+  let obj.data = a:data
+  call extend(obj, s:m, 'error')
+  return obj
+endfunction
 
 echo "-setup--"
 let a = Array.new(range(5))
@@ -203,7 +203,7 @@ finish
 
 " Phrase: SaveExcursion
 "============================================================
-fun! g:SaveExcursion(fun)
+function! g:SaveExcursion(fun)
 let win_saved = winsaveview()
 let org_win = winnr()
 let org_buf = bufnr('%')
@@ -217,21 +217,20 @@ finally
 endtry
 
 return result
-endfun
+endfunction
 
-fun! PasteToTarget()
+function! PasteToTarget()
+  let fun = {}
+  function! fun.call()
+    call g:Pm.next_mark()
+    normal P`[V`]
+    redraw!
+    sleep 500m
+    normal <Esc>
+  endfunction
 
-let fun = {}
-fun! fun.call()
-  call g:Pm.next_mark()
-  normal P`[V`]
-  redraw!
-  sleep 500m
-  normal <Esc>
-endfun
-
-call g:SaveExcursion(fun)
-endfun
+  call g:SaveExcursion(fun)
+endfunction
 
 " Phrase: Object copy(), deepcopy()
 "============================================================
@@ -298,9 +297,9 @@ command! -nargs=* E :call E(<q-args>)
 let U = {}
 function! U.createTypeCheckerFor(type)
   let checker = {'type': a:type }
-  fun! checker.check(type) dict
+  function! checker.check(type) dict
     return (type(a:type) == type(self.type))
-  endfun
+  endfunction
   return checker
 endfunction
 
@@ -427,14 +426,14 @@ call hanako.hello()
 " Phrase: Array multiple asignment
 "============================================================
 let member = [
-			\ ["Yamada", "Tarou", 1999, 9, 1],
-			\ ["Yamada", "Hanako", 1970, 3, 11]
-			\ ]
+      \ ["Yamada", "Tarou", 1999, 9, 1],
+      \ ["Yamada", "Hanako", 1970, 3, 11]
+      \ ]
 
 for [sec_name, first_name; date ] in member
-	let full_name = "'".sec_name." ".first_name."'"
-	let born_date = join(date,"_")
-	echo full_name." was born at ".born_date."."
+  let full_name = "'".sec_name." ".first_name."'"
+  let born_date = join(date,"_")
+  echo full_name." was born at ".born_date."."
 endfor
 
 " Phrase: Misc
@@ -1028,4 +1027,3 @@ function! s:CDtoCurrentFile()
         redraw!
     endif
 endfunction
-
